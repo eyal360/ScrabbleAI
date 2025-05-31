@@ -2,17 +2,17 @@ from google.adk.agents import Agent, LlmAgent
 from pydantic import BaseModel, Field
 
 # ---- Define Output Schema ----
-class Coordinator(BaseModel):
-    fullname: str = Field(
-        description="The full name of the user",
-    )
-    good_days: list[str] = Field(
-        description="A list of days in a specific month that the user wants to work on. If the user does provide any days, this list should be empty.",
-    )
-    bad_days: list[dict] = Field(
-        description="A list of dictionary values containing the key: dates in a specific month that the user does not want to work in and the value: the reason why not. If the user does provide any days, this list should be empty.",
-    )
+class DayOff(BaseModel):
+    date: str = Field(description="The date the user does not want to work on, in dd/mm/yyyy or range format")
+    reason: str = Field(description="The reason the user can't work on that date")
 
+class Coordinator(BaseModel):
+    fullname: str = Field(description="The full name of the user")
+    good_days: list[str] = Field(description="A list of days in a specific month that the user wants to work on. If the user does not provide any days, this list should be empty.")
+    bad_days: list[DayOff] = Field(description="A list of DayOff entries with date and reason why not.")
+    other: list[str] = Field(description="A list of other constraints or preferences the user has if it is not in a format of a date, such as 'I prefer to work in the morning' or 'I am allergic to cleaning materials'.")
+
+# ---- Define the Agent ----
 root_agent = LlmAgent(
     name="coordinator_agent",
     model="gemini-2.0-flash", # https://cloud.google.com/vertex-ai/generative-ai/docs/models/gemini/2-0-flash
@@ -37,9 +37,10 @@ root_agent = LlmAgent(
 
         IMPORTANT: Your response must be a valid JSON object that matches this structure:
         {
-            "fullname": "The full name of the user, with capitalized first letters", e.g. "John Doe",
-            "good_days": List of days the user wants to work on, e.g ["01/06/2025", "04-10/06/2026", ...],
-            "bad_days": List of dictionary values of days the user does not want to work on, e.g [{"02/06/2025":"sick day"}, {"15-17/06/2026":"wedding for my brother"}, ...]
+        "fullname": "The full name of the user, with capitalized first letters", e.g. "John Doe",
+        "good_days": List of days the user wants to work on, e.g ["01/06/2025", "04-10/06/2026", ...],
+        "bad_days": List of dictionary values of days the user does not want to work on, e.g [{"02/06/2025":"sick day"}, {"15-17/06/2026":"wedding for my brother"}, ...],
+        "other": List of other constraints or preferences the user has if it is not in a format of a date,
         }
         
         DO NOT include any additional text or explanations in your response, just the JSON object.
