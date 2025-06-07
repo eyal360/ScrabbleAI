@@ -14,7 +14,7 @@ class Coordinator(BaseModel):
 
 # ---- Define the Agent ----
 root_agent = LlmAgent(
-    name="coordinator_agent",
+    name="talker_agent",
     model="gemini-2.0-flash", # https://cloud.google.com/vertex-ai/generative-ai/docs/models/gemini/2-0-flash
     description="Receive initial constraints from the users about work shifts",
     instruction="""
@@ -49,7 +49,3 @@ root_agent = LlmAgent(
     output_schema=Coordinator,
     output_key="coordinator_output",
 )
-
-
-
-
